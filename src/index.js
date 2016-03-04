@@ -67,7 +67,9 @@ const initailizer = stampit()
         start(callback){
             http.listen(this.port,()=>{
                 console.log("Server start at",this.port);
-                callback(this.appInfo);
+                if(callback){
+                    callback(this.appInfo);
+                }
             });
         }
     });
