@@ -5,4 +5,4 @@ var app = require("./index")();
 //app.initRouter("/index");
 //app.initSocket("index");
 //app.initSocket("others");
-app.initServer();
+app.start();
