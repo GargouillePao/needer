@@ -1,6 +1,6 @@
 
 //var config = require("./config")();
-var app = require("./init")();
+var app = require("./index")();
 //app.configure(config);
 //app.initRouter("/index");
 //app.initSocket("index");

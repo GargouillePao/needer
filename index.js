@@ -6,20 +6,19 @@ var app = require("express")();
 var http = require("http").Server(app);
 var io = require("socket.io")(http);
 var path = require("path");
-
 const initailizer = stampit()
-    .refs({
-        routerPath:"",
-        socketPath:"",
-        modelPath:"",
-        port:80,
-        appInfo:{io:io} //全局传播的变量，保存一个工厂方法和，内存缓存变量
+    .props({
+        router = require("./router")()
     })
     .methods({
         /**
          * 初始化配置
          */
         configure(config){
+            if(!this.appInfo){
+                this.appInfo = {};
+                this.appInfo["io"] = io;
+            }
             if(config.port){
                 this.port = config.port;
             }
@@ -39,9 +38,9 @@ const initailizer = stampit()
                 app.set("views",config.views);
             }
             if(config.routers){
-                this.routerPath = path.resolve(config.routers);
+                this.router.routPath = path.resolve(config.routers);
                 if(config.controllers){
-                    this.routerPath = path.resolve(config.controllers,config.routers);
+                    this.router.routPath = path.resolve(config.controllers,config.routers);
                 }
             }
             if(config.sockets){
@@ -55,8 +54,11 @@ const initailizer = stampit()
         /**
          * 初始化路由,router为路由地址/router控制器
          */
-        initRouter(router){
-            app.use(router,require(path.join(this.routerPath,router)));
+        useRouter(opt){
+            this.router.use(app,opt);
+        },
+        createRouter(){
+            return this.router.router();
         },
 
         /**
