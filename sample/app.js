@@ -1,0 +1,28 @@
+var app = require("../src/index")();
+app.configure({
+    port:8000
+});
+app.configure({
+    path:{
+        view:"view",
+        model:"models"
+    }
+});
+app.configure({
+    path:{
+        controller:{
+            root:"controller",
+            router:"routers",
+            ws:"sockets"}
+    }
+});
+app.configure({
+    template:"ejs"
+});
+app.use({
+    router:{src:"router",url:"/"}
+});
+app.use({
+    ws:{src:"socket",nsp:""}
+});
+app.start();

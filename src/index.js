@@ -1,78 +1,84 @@
 
-var stampit = require("stampit");
 var express = require("express");
 var expressInst = express();
 var http = require("http").Server(expressInst);
 var io = require("socket.io")(http);
 var path = require("path");
+var Base = require("./base").object;
 
-var routerManager = require("./routerManger")();
-var socketManager = require("./socketManager")();
+var routerManager = require("./routerManager")();
+var wsconnManager = require("./wsconnManager")();
 var modelManager = require("./modelManager")();
 
-const initailizer = stampit()
-    .methods({
+var Initializer = function(){
+    Base.call(this);
+    /**
+     * 配置port{http,ws},path{modal,view},controller{root,ws,router},template
+     * @param config
+     */
+    this.configure = (config)=>{
         /**
-         * 初始化配置 /port/models/template/views/routers/sockets
+         * 配置app到所有Manager
          */
-        configure(config){
-            if(!this.appInfo){
-                this.appInfo = {};
-                this.appInfo["io"] = io;
+        if(this.get("app")==""){
+            var appInfo = {io:io};
+            this.store("app",appInfo);
+            modelManager.config(appInfo);
+            routerManager.config(appInfo);
+            wsconnManager.config(appInfo);
+        }
+        var _port = config.port||{http:80,ws:80};
+        var _path = config.path||{model:__dirname,view:__dirname};
+        if(config.port){
+            this.searchAndSet("httpPort","http",_port);
+            this.searchAndSet("wsPort","ws",_port);
+        }
+        if(config.path){
+            this.searchAndSet("modelPath","model",_path,(modelPath)=>{
+                modelManager.setPath(modelPath);
+            });
+            this.searchAndSet("viewPath","view",_path,(viewPath)=>{
+                expressInst.set("views",viewPath);
+            });
+            if(config.path.controller){
+                var _controller = config.path.controller||{root:__dirname,router:"",ws:""};
+                routerManager.setPath(_controller);
+                wsconnManager.setPath(_controller);
             }
-            if(config.port){
-                this.port = config.port;
-            }
-            if(config.models){
-                config.modelPath = path.resolve(config.models);
-                modelManager.config(this.appInfo,config);
-            }
-            if(config.template){
-                expressInst.engine(".html",require(config.template).__express);
-                expressInst.set("view engine",config.template);
-            }
-            if(config.views){
-                expressInst.set("views",config.views);
-            }
-            if(config.routers){
-                config.routPath = path.resolve(config.routers);
-                if(config.controllers){
-                    config.routPath = path.resolve(config.controllers,config.routers);
-                }
-                routerManager.config(this.appInfo,config);
-            }
-            if(config.sockets){
-                config.socketPath = path.resolve(config.sockets);
-                if(config.controllers){
-                    config.socketPath = path.resolve(config.controllers,config.sockets);
-                }
-                socketManager.config(this.appInfo,config);
-            }
-        },
-        /**
-         * 初始化路由,opt[url,src] url(路由)/src(文件路径)
-         */
-        useRouter(opt){
-            routerManager.use(expressInst,opt);
-        },
-        /**
-         * 初始化SocketIO，opt[nsp,src] nsp(路由)/src(文件路径)
-         */
-        useSocket(opt){
-            socketManager.use(this.appInfo,opt);
-        },
-        /**
-         * 初始化服务器,开启http服务器
-         */
-        start(callback){
-            http.listen(this.port,()=>{
-                console.log("Server start at",this.port);
-                if(callback){
-                    callback(this.appInfo);
+        }
+        if(config.template){
+            expressInst.engine(".html",require(config.template).__express);
+            expressInst.set("view engine",config.template);
+        }
+    };
+    this.use = (opt)=>{
+        if(opt["router"]){
+            routerManager.use(expressInst,opt["router"],(data)=>{
+                if(!data.succeed){
+                    console.error("Use Router Error",data);
                 }
             });
         }
-    });
+        if(opt["ws"]){
+            wsconnManager.use(this.get("app"),opt["ws"],(data)=>{
+                if(!data.succeed){
+                    console.error("Use WS Error",data);
+                }
+            });
+        }
+    };
+    this.start = (callback)=>{
+        http.listen(this.get("httpPort"),()=>{
+            console.log("Server start at",this.get("httpPort"));
+            if(callback){
+                callback(this.get("app"));
+            }
+        });
+    }
+};
 
-module.exports = initailizer;
-module.exports.Router = express.Router;
+module.exports = function(){
+    return new Initializer();
+};
+module.exports.Router = require("./router");
+module.exports.WSConnection = require("./wsconnection");

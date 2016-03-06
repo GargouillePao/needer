@@ -1,17 +1,35 @@
 
-var stampit = require("stampit");
+var ControllerManager = require("./controllerManager").object;
 var path = require("path");
-const modelManager = stampit
-    .refs({
-        modelPath:""
-    })
-    .methods({
-        config(appInfo,opt){
-            this.modelPath = opt.modelPath||"";
-            appInfo.factory = this.factory;
-        },
-        factory(modelName){
-            return require(path.join(this.modelPath,modelName));
+var Manager = function(){
+    ControllerManager.apply(this,arguments);
+
+    /**
+     * ÅäÖÃappInfo
+     * @param appInfo
+     */
+    this.config = (appInfo)=>{
+        appInfo.factory = this.factory;
+        this.store("app",appInfo);
+    };
+    this.setPath = (_path)=>{
+        if(typeof _path == "string"){
+            this.set("path",path.resolve(_path));
         }
-    });
-module.exports = modelManager;
+        if(typeof _path == "object"){
+            var cpath = _path["model"] || "";
+            this.set("path",path.resolve(cpath))
+        }
+    };
+    this.factory = (modelName)=>{
+        return require(path.join(this.getPath(),modelName));
+    }
+};
+
+module.exports = function(){
+    return new Manager();
+};
+module.exports.object = Manager;
+module.exports.create = function(){
+    return new Manager();
+};
