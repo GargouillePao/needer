@@ -1,4 +1,5 @@
 var Emitter = require("events").EventEmitter;
+var Controller = require("./controller").object;
 var util = require("util");
 module.exports = function(){
     return RouterFactory();
@@ -10,6 +11,7 @@ var RouterFactory  = function(){
 };
 var Router = function(){
     Emitter.call(this);
+    Controller.call(this);
     var methods = {
         get:"GET",push:"PUSH",put:"PUT",set:"SET"
     };
@@ -39,7 +41,7 @@ var Router = function(){
         }
     };
 
-    var lisntener = (method)=>{
+    var listener = (method)=>{
         return function(){
             listenerMid(arguments,(urlListened,v)=>{
                 this.on(method,(data)=>{
@@ -62,9 +64,9 @@ var Router = function(){
     this.emitters[methods.push] = emitter(methods.push);
     this.emitters[methods.put] = emitter(methods.put);
 
-    this.get = lisntener(methods.get);
-    this.push = lisntener(methods.push);
-    this.put = lisntener(methods.put);
+    this.get = listener(methods.get);
+    this.push = listener(methods.push);
+    this.put = listener(methods.put);
     this.use = (req,res,next)=>{
         this.emitters[req.method]({
             url:req.url,

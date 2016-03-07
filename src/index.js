@@ -14,9 +14,9 @@ var Initializer = function(){
     Base.call(this);
     /**
      * 配置port{http,ws},path{modal,view},controller{root,ws,router},template
-     * @param config
+     * @param _config
      */
-    this.configure = (config)=>{
+    this.config = (_config)=>{
         /**
          * 配置app到所有Manager
          */
@@ -27,28 +27,34 @@ var Initializer = function(){
             routerManager.config(appInfo);
             wsconnManager.config(appInfo);
         }
-        var _port = config.port||{http:80,ws:80};
-        var _path = config.path||{model:__dirname,view:__dirname};
-        if(config.port){
+        var _port = _config.port||{http:80,ws:80};
+        var _path = _config.path||{model:__dirname,view:__dirname};
+        if(_config.port){
             this.searchAndSet("httpPort","http",_port);
             this.searchAndSet("wsPort","ws",_port);
+            if(this.get("wsPort")!=this.get("httpPort")){
+                this.get("app").io = require("socket.io")(this.get("wsPort"));
+            }else{
+                this.get("app").io = require("socket.io")(http);
+            }
         }
-        if(config.path){
+
+        if(_config.path){
             this.searchAndSet("modelPath","model",_path,(modelPath)=>{
                 modelManager.setPath(modelPath);
             });
             this.searchAndSet("viewPath","view",_path,(viewPath)=>{
                 expressInst.set("views",viewPath);
             });
-            if(config.path.controller){
-                var _controller = config.path.controller||{root:__dirname,router:"",ws:""};
+            if(_config.path.controller){
+                var _controller = _config.path.controller||{root:__dirname,router:"",ws:""};
                 routerManager.setPath(_controller);
                 wsconnManager.setPath(_controller);
             }
         }
-        if(config.template){
-            expressInst.engine(".html",require(config.template).__express);
-            expressInst.set("view engine",config.template);
+        if(_config.template){
+            expressInst.engine(".html",require(_config.template).__express);
+            expressInst.set("view engine",_config.template);
         }
     };
     this.use = (opt)=>{

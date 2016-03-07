@@ -74,7 +74,7 @@ suite("app", ()=>{
     });
     suite("controllerManager",()=>{
         setup(()=>{
-            this.manager = require("../src/controllerManager")();
+            this.manager = require("../src/manager")();
             console.log("start m");
         });
         test("should return hello",()=>{

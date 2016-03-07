@@ -1,32 +1,23 @@
 
 var path = require("path");
-var ControllerManager = require("./controllerManager").object;
+var BaseManager = require("./manager").object;
 var initSocketModel = function(listener,appInfo){
+    var nspName = listener.nsp||"";
     var nsp = appInfo.io;
-    if(listener.nsp&&listener.nsp!=""){
-        nsp = appInfo.io.of(listener.nsp);
+    if(nspName!=""){
+        nsp = appInfo.io.of(nspName);
     }
+    listener.setApp(appInfo);
     nsp.use((socket, next)=>{
-        console.log(socket.request.headers.host,"trying to connect");
-        listener.emit("trying",socket,appInfo,next);
+        listener.emit("trying",socket,next);
     });
     nsp.on("connection",(socket)=>{
-        console.log(socket.request.headers.host,"connected");
-        listener.emit("connect",socket,appInfo);
+        listener.emit("connect",socket);
     });
 };
 var Manager = function(){
-    ControllerManager.apply(this,arguments);
-    this.setPath = (_path)=>{
-        if(typeof _path == "string"){
-            this.set("path",path.resolve(_path));
-        }
-        if(typeof _path == "object"){
-            var cpath = _path["root"] || "";
-            var rpath = _path["ws"] || "";
-            this.set("path",path.resolve(cpath,rpath))
-        }
-    };
+    BaseManager.apply(this,arguments);
+    this.setPath = this.setPath.bind(this,"ws");
     this.use = (expressInst,opt,cb)=> {
         this.filter(opt,["nsp","src"],(nsp,_src)=>{
             var callback = cb||function(){};
@@ -40,8 +31,9 @@ var Manager = function(){
             };
             if(appInfo!=""){
                 if(appInfo.io){
-                    if(require(src)){
-                        initSocketModel(require(src),appInfo);
+                    var wsconnection = require(src);
+                    if(wsconnection){
+                        initSocketModel(wsconnection,appInfo);
                         callbackmsg.error = "";
                         callbackmsg.succeed = true;
                     }else{

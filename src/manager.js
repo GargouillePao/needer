@@ -10,8 +10,16 @@ var Manager = function(){
     this.config = (appInfo)=>{
         this.store("app",appInfo);
     };
-    this.setPath = (_path)=>{
-        this.set("path",path.resolve(_path));
+    this.setPath = (_key,_path)=>{
+        if(typeof _path == "string"){
+            this.set("path",path.resolve(_path));
+        }
+        if(typeof _path == "object"){
+            var cpath = _path["root"] || "";
+            var rpath = _path[_key] || "";
+            if(rpath == ""){cpath = ""};
+            this.set("path",path.resolve(cpath,rpath))
+        }
     };
     this.getPath = ()=>{
         return this.get("path");

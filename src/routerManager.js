@@ -1,18 +1,9 @@
 
 var path = require("path");
-var ControllerManager = require("./controllerManager").object;
+var BaseManager = require("./manager").object;
 var Manager = function(){
-    ControllerManager.apply(this,arguments);
-    this.setPath = (_path)=>{
-        if(typeof _path == "string"){
-            this.set("path",path.resolve(_path));
-        }
-        if(typeof _path == "object"){
-            var cpath = _path["root"] || "";
-            var rpath = _path["router"] || "";
-            this.set("path",path.resolve(cpath,rpath))
-        }
-    };
+    BaseManager.apply(this,arguments);
+    this.setPath = this.setPath.bind(this,"router");
     this.use = (expressInst,opt,cb)=> {
         this.filter(opt,["url","src"],(url,_src)=>{
             var callback = cb||function(){};
@@ -23,11 +14,13 @@ var Manager = function(){
                 url:url,
                 src:src
             };
+            var router = require(src);
             if(expressInst.use){
-                if(require(src).use){
+                if(router.use){
+                    router.setApp(this.get("app"));
                     callbackmsg.error = "";
                     callbackmsg.succeed = true;
-                    expressInst.use(url, require(src).use);
+                    expressInst.use(url, router.use);
                 }else{
                     callbackmsg.error = "not a router controller";
                 }

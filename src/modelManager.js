@@ -1,9 +1,8 @@
 
-var ControllerManager = require("./controllerManager").object;
+var BaseManager = require("./manager").object;
 var path = require("path");
 var Manager = function(){
-    ControllerManager.apply(this,arguments);
-
+    BaseManager.apply(this,arguments);
     /**
      * ÅäÖÃappInfo
      * @param appInfo
@@ -12,15 +11,7 @@ var Manager = function(){
         appInfo.factory = this.factory;
         this.store("app",appInfo);
     };
-    this.setPath = (_path)=>{
-        if(typeof _path == "string"){
-            this.set("path",path.resolve(_path));
-        }
-        if(typeof _path == "object"){
-            var cpath = _path["model"] || "";
-            this.set("path",path.resolve(cpath))
-        }
-    };
+    this.setPath = this.setPath.bind(this,"model");
     this.factory = (modelName)=>{
         return require(path.join(this.getPath(),modelName));
     }
