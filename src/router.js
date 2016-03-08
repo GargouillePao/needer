@@ -2,12 +2,7 @@ var Emitter = require("events").EventEmitter;
 var Controller = require("./controller").object;
 var util = require("util");
 module.exports = function(){
-    return RouterFactory();
-};
-var RouterFactory  = function(){
-    var router = new Router();
-    //console.log(router)
-    return router;
+    return new Router();
 };
 var Router = function(){
     Emitter.call(this);

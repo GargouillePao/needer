@@ -2,11 +2,7 @@ var Emitter = require("events").EventEmitter;
 var Controller = require("./controller").object;
 var util = require("util");
 module.exports = function(){
-    return SocketFactory();
-};
-var SocketFactory  = function(){
-    var socket = new Socket();
-    return socket;
+    return new Socket();
 };
 var Socket = function(){
     Emitter.call(this);

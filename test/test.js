@@ -160,6 +160,37 @@ suite("app", ()=>{
             console.log("tear down routerM ...");
         });
     });
+    suite("model",()=>{
+        setup(()=>{
+            var app = require("../src/index")();
+            app.model.config({path:{model:"models",root:"sample"}});
+            this.model = app.get("app").model;
+            console.log("start model");
+        });
+        test("should return saving",()=>{
+            var model1 = this.model.factory("entity")();
+            assert.equal("saving",model1.find("saving"));
+        });
+        test("should return succeed}",()=>{
+            var model2 = this.model.factory("entity")();
+            model2.config({save:{
+                path:"sample/storage",
+                name:"uid",
+                type:".json",
+                keys:["uid","psw"]
+            }})
+            model2.save((err,data)=>{
+                if(err){
+                    console.error(err);
+                    throw err;
+                }
+                assert.deepEqual("{\"uid\":\"12345\",\"psw\":\"xxxxx\"}",data);
+            });
+        });
+        teardown(()=>{
+            console.log("tear down model ...");
+        });
+    });
     teardown(()=>{
         console.log("tear down...");
     });

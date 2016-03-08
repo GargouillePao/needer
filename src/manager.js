@@ -7,9 +7,9 @@ var Manager = function(){
      * ÅäÖÃappInfo
      * @param appInfo
      */
-    this.config = (appInfo)=>{
-        this.store("app",appInfo);
-    };
+    this.init = (appinfo)=>{
+        this.store("app",appinfo);
+    }
     this.setPath = (_key,_path)=>{
         if(typeof _path == "string"){
             this.set("path",path.resolve(_path));

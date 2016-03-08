@@ -1,27 +1,18 @@
 var app = require("../src/index")();
-app.config({
-    port:{
-        http:8000,
-        ws:8080
-    }
-});
-app.config({
-    path:{
-        view:"view",
-        model:"models",
-        controller:{
-            root:"controller",
-            ws:"sockets"
-        }
-    }
-});
-app.config({
+
+app.view.config({
+    path:"view",
     template:"ejs"
 });
-app.use({
-    router:{src:"router",url:"/"}
+app.model.config({
+    path:"models"
 });
-app.use({
-    ws:{src:"socket",nsp:""}
+app.controller.config({
+    port:{http:8000,ws:8080}
 });
+app.controller.config({
+    path:{root:"controller",router:"routers",ws:"sockets"},
+});
+app.controller.use("router",{src:"router",url:"/"});
+app.controller.use("ws",{src:"socket",nsp:""});
 app.start();
