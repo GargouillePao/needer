@@ -169,23 +169,26 @@ suite("app", ()=>{
         });
         test("should return saving",()=>{
             var model1 = this.model.factory("entity")();
-            assert.equal("saving",model1.find("saving"));
-        });
-        test("should return succeed}",()=>{
-            var model2 = this.model.factory("entity")();
-            model2.config({save:{
+            model1.config({save:{
                 path:"sample/storage",
-                name:"uid",
+                id:"uid",
                 type:".json",
                 keys:["uid","psw"]
-            }})
-            model2.save((err,data)=>{
+            }});
+            assert.equal({},model1.save);
+        });
+        test("should return hello",(done)=>{
+            var model2 = this.model.factory("entity")();
+            model2.config();
+            model2.savepsw((err,data)=>{
                 if(err){
                     console.error(err);
                     throw err;
                 }
-                assert.deepEqual("{\"uid\":\"12345\",\"psw\":\"xxxxx\"}",data);
+                assert.equal("hello-",data.psw);
+                done();
             });
+
         });
         teardown(()=>{
             console.log("tear down model ...");
