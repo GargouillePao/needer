@@ -169,18 +169,13 @@ suite("app", ()=>{
         });
         test("should return saving",()=>{
             var model1 = this.model.factory("entity")();
-            model1.config({save:{
-                path:"sample/storage",
-                id:"uid",
-                type:".json",
-                keys:["uid","psw"]
-            }});
+            model1.config();
             assert.equal({},model1.save);
         });
         test("should return hello",(done)=>{
             var model2 = this.model.factory("entity")();
             model2.config();
-            model2.savepsw((err,data)=>{
+            model2.saveAll((err,data)=>{
                 if(err){
                     console.error(err);
                     throw err;
@@ -188,7 +183,42 @@ suite("app", ()=>{
                 assert.equal("hello-",data.psw);
                 done();
             });
-
+        });
+        test("should return Yes",(done)=>{
+            var model3 = this.model.factory("entity")();
+            model3.config();
+            //model3.saveInDB((err,data)=>{
+            //    if(err){
+            //        console.error(err);
+            //        throw err;
+            //    }
+            //    assert.equal("hello-",data.psw);
+            //    done();
+            //});
+        });
+        test("should return {}s",(done)=>{
+            var model4 = this.model.factory("entity")();
+            model4.config();
+            model4.findThisInBD((err,data)=>{
+                if(err){
+                    console.error(err);
+                    throw err;
+                }
+                assert.equal("hello-",data);
+                done();
+            });
+        });
+        test("should return {}ssss",(done)=>{
+            var model4 = this.model.factory("entity")();
+            model4.config();
+            model4.updateInDB((err,data)=>{
+                if(err){
+                    console.error(err);
+                    throw err;
+                }
+                assert.equal("hello-",data);
+                done();
+            });
         });
         teardown(()=>{
             console.log("tear down model ...");
