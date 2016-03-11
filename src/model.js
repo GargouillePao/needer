@@ -92,33 +92,48 @@ var readDB = function(dbType,dbUrl,dbCollection,primaryKey,primaryValue,cb){
     }
 };
 var Model = function(){
-    var saveInfo = {};
+    var fileInfo = {};
+    var dbInfo = {};
+
+    var setFile = function(opt) {
+        var info = {};
+        typeof opt["path"] == "string" ? info["path"] = opt["path"] : info["path"] = fileInfo["path"];
+        typeof opt["extra"] == "string" ? info["extra"]  = opt["extra"] : info["extra"] = fileInfo["extra"];
+        typeof opt["id"] == "string" ? info["id"] = opt["id"] : info["id"] = fileInfo["id"];
+        typeof opt["keys"] == "object" && opt["keys"] instanceof Array ? info["keys"] = opt["keys"] : info["keys"] = fileInfo["keys"];
+        return info;
+    };
+    var setDB = function(opt){
+        var info = {};
+        typeof opt["type"] == "string" ? info["type"] = opt["type"] : info["type"] = dbInfo["type"];
+        typeof opt["url"] == "string" ? info["url"]  = opt["url"] : info["url"] = dbInfo["url"];
+        typeof opt["id"] == "string" ? info["id"] = opt["id"] : info["id"] = dbInfo["id"];
+        typeof opt["keys"] == "object" && opt["keys"] instanceof Array ? info["keys"] = opt["keys"] : info["keys"] = dbInfo["keys"];
+        typeof opt["collection"] == "string" ? info["collection"] = opt["collection"] : info["collection"] = dbInfo["collection"];
+        return info;
+    };
 
     /**
      * @description config the model
-     * @param {Object} opt = {save:{
+     * @param {Object} opt = {
+     * file:{
      *      path:"xxx",
      *      extra:".xxx",
      *      id:"xxx",
      *      keys:[xx,xx,xx]
-     *  }
+     *      }
+     * db:{
+     *      type:"xxx",
+     *      id:"xxx",
+     *      keys:[xx,xx,xx]
+     *      }
      * }
      * @param {function} cb
      */
     this.config = function(opt,cb){
-        var savingInfo = opt["save"];
-        if(savingInfo){
-            saveInfo["path"] = savingInfo["path"]||"";
-            saveInfo["extra"] = savingInfo["extra"]||"";
-            saveInfo["id"] = savingInfo["id"]||"";
-            saveInfo["keys"] = savingInfo["keys"]||[];
-            saveInfo["db"] = savingInfo["db"]||"";
-            saveInfo["url"] = savingInfo["url"]||"";
-            saveInfo["collection"] = savingInfo["collection"]||"";
-        }
-        if(typeof cb == "function"){
-            cb(saveInfo);
-        }
+        if(opt["file"]) fileInfo = setFile(opt["file"]);
+        if(opt["db"]) dbInfo = setDB(opt["db"]);
+        if(typeof cb == "function") cb({file:fileInfo,db:dbInfo});
     };
 
     /**
@@ -149,131 +164,80 @@ var Model = function(){
         return info
     };
 
-    /**
-     * filter for file
-     * @param {String} extraName = ["xx"|null]
-     * @param {String} fileNameKey = ["xx"|null]
-     * @param {Array(String)} savingKeys = [[]|null]
-     * @param {function} callback = [function(){}|null] return the errs or saved data
-     * @returns {Object} = [{
-            file:fileName,
-            keys:keys,
-            extra:extra,
-            cb:cb
-        }]
-     */
-    var fileFilter = function(){
-        var extra = (typeof arguments[0] == "string") ? arguments[0] : saveInfo["extra"];
-        var arg = [].slice.call(arguments,0);
-        if(arg.length>1){
-            arg.shift();
+    this.getInfo = function(type){
+        if(type == "db")return dbInfo;
+        if(type == "file")return fileInfo;
+    }
+    var getStorage = function(info){
+        var storage = {};
+        if(info.keys && info.keys.forEach){
+            info.keys.forEach((key)=>{
+                if(this[key]) storage[key] = this[key];
+            });
+        }else{
+            storage = this;
         }
-        var info = filter.apply(this,arg);
+        return storage;
+    }
+
+    var fileFilter = function(opt){
+        var info = setFile(opt);
+        info["idValue"] = this[info.id];
+        info["file"] = path.resolve(info["path"],info.idValue||"")+info.extra;
+        return info;
+    };
+    this.saveToFile = function(opt,cb){
+        var info = fileFilter.call(this,opt);
+        var storage = getStorage.call(this,info);
+        if(info.idValue){
+            writeFile(info.file,storage,info.extra,cb);
+        }else{
+            cb("this primary key has no value error");
+        }
+    };
+    this.updateToFile = function(opt,cb){
+        var info = fileFilter.call(this,opt);
+        var storage = getStorage.call(this,info);
+        if(info.idValue){
+            updateFile(info.file,storage,info.extra,cb);
+        }else{
+            cb("this primary key has no value");
+        }
+
+    };
+    this.findInFile = function(opt,cb){
+        var info = fileFilter.call(this,opt);
+        readFile(info.file,info.extra,cb);
+    };
+
+    var dbFilter = function(opt){
+        var info = setDB(opt);
         var pKey = info.id;
-        var pVal = this[pKey]||"";
-        var fileName = path.resolve(saveInfo["path"],pVal)+extra;
-        return {
-            file:fileName,
-            keys:info.keys,
-            extra:extra,
-            cb:info.cb
+        var pVal = this[info.id];
+        info["primary"] = {key:pKey,value:pVal};
+        return info;
+    };
+    this.updateToDB = function(opt,cb){
+        var info = dbFilter.call(this,opt);
+        var storage = getStorage.call(this,info);
+        if(info.primary){
+            updateDB(info.type,info.url,info.collection,storage,info.primary.key,info.primary.value,cb);
+        }else{
+            cb("no primary error");
         }
     };
-
-    /**
-     * save or update to file
-     * @param {String} extraName = ["xx"|null]
-     * @param {String} fileNameKey = ["xx"|null]
-     * @param {Array(String)} savingKeys = [[]|null]
-     * @param {function} callback = [function(){}|null] return the errs or saved data
-     */
-    this.saveToFile = function(){
-        var info = fileFilter.apply(this,arguments);
-        var storage = {};
-        info.keys.forEach((key)=>{
-            if(this[key]) storage[key] = this[key];
-        });
-        writeFile(info.file,storage,info.extra,info.cb);
-    };
-    this.updateToFile = function(){
-        var info = fileFilter.apply(this,arguments);
-        var storage = {};
-        info.keys.forEach((key)=>{
-            if(this[key]) storage[key] = this[key];
-        });
-        updateFile(info.file,storage,info.extra,info.cb);
-    };
-    /**
-     * find model from file
-     * @param {String} extraName = ["xx"|null]
-     * @param {String} fileNameKey = ["xx"|null]
-     * @param {function} callback = [function(){}|null] return the errs or saved data
-     */
-    this.findInFile = function(){
-        var info = fileFilter.apply(this,arguments);
-        readFile(info.file,info.extra,(err,obj)=>{
-            info.cb(err,obj);
-        })
-    };
-
-    /**
-     * filter for db
-     * @param {String} db = ["xx"|null]
-     * @param {String} url = ["xx"|null]
-     * @param {String} collection = ["xx"|null]
-     * @param {String} primaryKey = ["xx"|null]
-     * @param {Array(String)} savingKeys = [[]|null]
-     * @param {function} callback = [function(){}|null] return the errs or saved data
-     * @returns {Object} = [{
-            db:dbType,
-            url:dbUrl,
-            collection:dbCollection,
-            keys:keys,
-            primary:primaryKey{key,value},
-            cb:cb
-        }]
-     */
-    var dbFilter = function(){
-        var dbType = (typeof arguments[0] == "string") ? arguments[0] : saveInfo["db"];
-        var dbUrl = (typeof arguments[1] == "string") ? arguments[1] : saveInfo["url"];
-        var dbCollection = (typeof arguments[2] == "string") ? arguments[2] : saveInfo["collection"];
-        var arg = [].slice.call(arguments,0);
-        if(arg.length>1){
-            arg.shift();
-        }
-        var info = filter.apply(this,arg);
-        var pKey = info.id;
-        var pVal = this[pKey]||"";
-        return {
-            db:dbType,
-            url:dbUrl,
-            collection:dbCollection,
-            keys:info.keys,
-            primary:{key:pKey,value:pVal},
-            cb:info.cb
+    this.insertToDB = function(opt,cb){
+        var info = dbFilter.call(this,opt);
+        var storage = getStorage.call(this,info);
+        if(info.primary){
+            insertDB(info.type,info.url,info.collection,storage,info.primary.key,info.primary.value,cb);
+        }else{
+            cb("no primary error");
         }
     };
-
-    this.updateToDB = function(){
-        var info = dbFilter.apply(this,arguments);
-        var storage = {};
-        info.keys.forEach((key)=>{
-            if(this[key]) storage[key] = this[key];
-        });
-        updateDB(info.db,info.url,info.collection,storage,info.primary.key,info.primary.value,info.cb);
-    };
-    this.insertToDB = function(){
-        var info = dbFilter.apply(this,arguments);
-        var storage = {};
-        info.keys.forEach((key)=>{
-            if(this[key]) storage[key] = this[key];
-        });
-        insertDB(info.db,info.url,info.collection,storage,info.primary.key,info.primary.value,info.cb);
-    };
-
-    this.findInDB = function(){
-        var info = dbFilter.apply(this,arguments);
-        readDB(info.db,info.url,info.collection,info.primary.key,info.primary.value,info.cb);
+    this.findInDB = function(opt,cb){
+        var info = dbFilter.apply(this,opt);
+        readDB(info.db,info.url,info.collection,info.primary.key,info.primary.value,cb);
     };
 };
 

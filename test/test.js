@@ -167,56 +167,38 @@ suite("app", ()=>{
             this.model = app.get("app").model;
             console.log("start model");
         });
-        test("should return saving",()=>{
-            var model1 = this.model.factory("entity")();
-            model1.config();
-            assert.equal({},model1.save);
-        });
         test("should return hello",(done)=>{
             var model2 = this.model.factory("entity")();
             model2.config();
-            model2.saveAll((err,data)=>{
+            model2.savepsw((err,data)=>{
                 if(err){
                     console.error(err);
                     throw err;
                 }
-                assert.equal("hello-",data.psw);
+                assert.deepEqual({
+                    path:"sample/storage",
+                    id:"uid",
+                    extra:".json",
+                    keys:["uid","psw","mail"]
+                },model2.getFileInfo());
                 done();
             });
         });
-        test("should return Yes",(done)=>{
+        test("should return ----",(done)=>{
             var model3 = this.model.factory("entity")();
             model3.config();
-            //model3.saveInDB((err,data)=>{
-            //    if(err){
-            //        console.error(err);
-            //        throw err;
-            //    }
-            //    assert.equal("hello-",data.psw);
-            //    done();
-            //});
-        });
-        test("should return {}s",(done)=>{
-            var model4 = this.model.factory("entity")();
-            model4.config();
-            model4.findThisInBD((err,data)=>{
+            model3.updateInDB((err,data)=>{
                 if(err){
                     console.error(err);
                     throw err;
                 }
-                assert.equal("hello-",data);
-                done();
-            });
-        });
-        test("should return {}ssss",(done)=>{
-            var model4 = this.model.factory("entity")();
-            model4.config();
-            model4.updateInDB((err,data)=>{
-                if(err){
-                    console.error(err);
-                    throw err;
-                }
-                assert.equal("hello-",data);
+                assert.deepEqual({
+                    id:"uid",
+                    type:"mongodb",
+                    url:"mongodb://localhost:27017/needer",
+                    collection:"entity",
+                    keys:["uid","psw","mail"]
+                },model3.getDBInfo());
                 done();
             });
         });
