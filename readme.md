@@ -90,7 +90,7 @@ module.exports = router;
 #### ws controller
 ```javascript
 //just like socket.io
-var connection = require("needer).WSConnection();
+var connection = require("needer").WSConnection();
 connection.connect((socket)=>{
     console.log("Connect!!");
     var request = connection.requestParser(socket); // you can get the http request information
@@ -108,7 +108,7 @@ module.exports = connection;
 
 now I don't write the doc so....
 
-but you can know more about needer in the (sample)["https://github.com/GargouillePao/needer/tree/master/sample"]
+but you can know more about needer in the [sample]("https://github.com/GargouillePao/needer/tree/master/sample")
 
 by the way,this framework is developing,so you know....
 
