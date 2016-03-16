@@ -21,6 +21,7 @@ var Base = function(){
 
         var callback = cb || function(){};
         if(_value && typeof _value != "object"){
+            //console.log(key,_value);
             this.set(key,_value);
             callback(_value);
         }

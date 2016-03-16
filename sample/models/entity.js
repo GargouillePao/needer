@@ -1,5 +1,5 @@
 var path = require("path");
-var model = require(path.resolve("./src","index")).Model();
+var model = require(path.resolve("../src","index")).Model();
 module.exports = function(){
     return new Entity();
 };

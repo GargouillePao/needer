@@ -3,9 +3,9 @@ var path = require("path");
 var BaseManager = require("./manager").object;
 var initSocketModel = function(listener,appInfo){
     var nspName = listener.nsp||"";
-    var nsp = appInfo.io;
+    var nsp = appInfo.get("io");
     if(nspName!=""){
-        nsp = appInfo.io.of(nspName);
+        nsp = appInfo.get("io").of(nspName);
     }
     listener.setApp(appInfo);
     nsp.use((socket, next)=>{
@@ -30,7 +30,7 @@ var Manager = function(){
                 src:src
             };
             if(appInfo!=""){
-                if(appInfo.io){
+                if(appInfo.get("io")){
                     var wsconnection = require(src);
                     if(wsconnection){
                         initSocketModel(wsconnection,appInfo);

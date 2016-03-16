@@ -83,9 +83,15 @@ var readDB = function(dbType,dbUrl,dbCollection,primaryKey,primaryValue,cb){
             require("./mongoClient").getInstance(dbUrl,(db)=>{
                 var collection = db.collection(dbCollection);
                 var primary = {};
-                primary[primaryKey] = primaryValue;
+                if(primaryValue && primaryValue!=""){
+                    primary[primaryKey] = primaryValue;
+                }
                 collection.find(primary).toArray((err,result)=>{
-                    cb(err,result);
+                    if(err){
+                        cb(err,[]);
+                    }else{
+                        cb(err,result);
+                    }
                 });
             });
             return
@@ -236,8 +242,8 @@ var Model = function(){
         }
     };
     this.findInDB = function(opt,cb){
-        var info = dbFilter.apply(this,opt);
-        readDB(info.db,info.url,info.collection,info.primary.key,info.primary.value,cb);
+        var info = dbFilter.call(this,opt);
+        readDB(info.type,info.url,info.collection,info.primary.key,info.primary.value,cb);
     };
 };
 

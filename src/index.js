@@ -43,6 +43,16 @@ var Initializer = function(){
             expressInst.engine(".html",require(template).__express);
             expressInst.set("view engine",template);
         });
+        this.view.searchAndSet("static","static",opt,(staticPath)=>{
+            if(staticPath && staticPath instanceof Array){
+                for(var i = 0 ; i<staticPath.length;i++){
+                    expressInst.use(express.static(staticPath[i]));
+                };
+            }
+            if(staticPath && typeof staticPath == "string"){
+                expressInst.use(express.static(staticPath));
+            }
+        })
     };
 
     /**
@@ -61,9 +71,21 @@ var Initializer = function(){
                     if(this.get("app")==""){
                         this.init();
                     }
-                    this.get("app").io = require("socket.io")(wsPort);
+                    console.log(this.get("app"));
+                    this.get("app").store("io",require("socket.io")(wsPort));
                 }
             });
+        }
+        if(opt["plugin"]){
+            if(typeof expressInst.use == "function"){
+                if(opt["plugin"] instanceof Array) {
+                    opt["plugin"].forEach((v)=>{
+                        expressInst.use(v);
+                    })
+                }else{
+                    expressInst.use(opt["plugin"]);
+                }
+            }
         }
     }
     this.controller.use = (type,opts)=>{
@@ -82,7 +104,6 @@ var Initializer = function(){
             });
         }
     }
-
     this.start = (callback)=>{
         var port = this.controller.get("http");
         http.listen(port,()=>{

@@ -5,13 +5,13 @@ var Manager = function(){
     BaseManager.apply(this,arguments);
     this.setPath = this.setPath.bind(this,"router");
     this.use = (expressInst,opt,cb)=> {
-        this.filter(opt,["url","src"],(url,_src)=>{
+        this.filter(opt,["url","src"],(_url,_src)=>{
             var callback = cb||function(){};
             var src = path.join(this.getPath(), _src);
             var callbackmsg = {
                 succeed:false,
                 error:"not init express/not config",
-                url:url,
+                url:_url,
                 src:src
             };
             var router = require(src);
@@ -20,7 +20,7 @@ var Manager = function(){
                     router.setApp(this.get("app"));
                     callbackmsg.error = "";
                     callbackmsg.succeed = true;
-                    expressInst.use(url, router.use);
+                    expressInst.use(_url, router.use);
                 }else{
                     callbackmsg.error = "not a router controller";
                 }
